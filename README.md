@@ -41,10 +41,8 @@ Depends-on
 
  * [alexandria](http://common-lisp.net/project/alexandria/)
  * [anaphora](http://common-lisp.net/project/anaphora/)
- * [split-sequence](http://www.cliki.net/split-sequence)
  * [cl-ppcre](http://weitz.de/cl-ppcre/)
  * [local-time](http://common-lisp.net/project/local-time/)
- * [parse-float](https://github.com/soemraws/parse-float)
 
 
 Installation

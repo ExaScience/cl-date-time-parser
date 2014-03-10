@@ -16,8 +16,6 @@
   (:use :cl)
   (:nicknames #:date-time-parser)
   (:import-from #:anaphora       #:it #:aif #:acond)
-  (:import-from #:split-sequence #:split-sequence)
-  (:import-from #:parse-float    #:parse-float)
   (:export #:parse-date-time))
 
 (in-package #:cl-date-time-parser)
@@ -34,7 +32,7 @@
   (setf *features* (remove :et *features*))
 
   ;; when release, the following two lines should be comment out.
-  ;; (ql:quickload '(:cl-ppcre :split-sequence :anaphora :local-time :parse-float))
+  ;; (ql:quickload '(:cl-ppcre :anaphora :local-time))
   ;; (pushnew :et *features*)
   )
 
@@ -315,7 +313,7 @@ Reference:
                (when (= 4 (length time-parts))
                  (let ((frac-part (car (last time-parts))))
                    (setf fraction
-                         (parse-float
+                         (hcl:parse-float
                           (replace (copy-seq "0.0000")
                                    frac-part :start1 2)))))))
 
@@ -522,14 +520,14 @@ Reference:
                :do (incf universal-time (* num secs))
                :finally (when (<= 7 (length time-part))
                           (setf fraction
-                                (parse-float (replace time-part "00000.")))))
+                                (hcl:parse-float (replace time-part "00000.")))))
             (loop  ;Extended format: "hh:mm", "hh:mm:ss", "hh:mm:ss,ss"
                :for d :in (ppcre:split "[:,.]" time-part) ;"," for iso8601, "." for rfc3339
                :for secs :in '#.(list +hour-secs+ +minuite-secs+ +second+)
                :do (incf universal-time (* (parse-integer d) secs))
                :finally (when (<= 10 (length time-part))
                           (setf fraction
-                                (parse-float (replace time-part "00000000."))))))))
+                                (hcl:parse-float (replace time-part "00000000."))))))))
 
     ;; 2. Parse DATE-part:
     (labels
@@ -553,7 +551,7 @@ Reference:
            ;; Parse iso8601 extended format
            ;; "YYYY-MM", "YY-MM-DD", "YYYY-MM-DD", "YYYY-DDD", "YYYY-Www-D", "YYYYYY-DDD"
            (loop
-              :for token :in (split-sequence #\- date)
+              :for token :in (lw:split-sequence "-" date)
               :with year-parsed?  := nil
               :with month-parsed? := nil
               :do (case (length token)
