@@ -29,8 +29,7 @@ Parsable date-time-format: ISO8601, W3CDTF, RFC3339, RFC822, RFC2822, RFC5322, a
   :version     "0.1.03"
   :licence     "MIT License"
   :author      "Takaya OCHIAI <tkych.repl@gmail.com>"
-  :depends-on  (#:alexandria #:split-sequence #:anaphora
-                #:cl-ppcre #:local-time #:parse-float)
+  :depends-on  (#:alexandria #:anaphora #:cl-ppcre #:local-time)
   :components  ((:file "date-time-parser"))
   )
 
