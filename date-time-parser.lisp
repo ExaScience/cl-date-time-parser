@@ -284,6 +284,36 @@ c.f. RFC3339, (Appendix C. Leap Years)"
                                          (month-to-ut m nil))))
                        '("Dec" "December" 12))))
 
+(declaim (inline parse-float))
+
+(defun parse-float (string)
+  #+lispworks
+  (hcl:parse-float string)
+  #-lispworks
+  (let ((*read-base* 10) (*read-default-float-format* 'single-float) (*read-eval* nil))
+    (read-from-string string)))
+
+#+lispworks
+(declaim (inline split-sequence))
+
+#+lispworks
+(defun split-sequence (bag sequence)
+  (lw:split-sequence bag sequence))
+
+#-lispworks
+(defun split-sequence (bag sequence &aux (length (length sequence)))
+  (declare (simple-string bag sequence) (fixnum length)
+           (optimize (speed 3) (space 0) (debug 0) (safety 0)
+                     (compilation-speed 0)))
+  (let ((result '()) (start 0) (end 0))
+    (declare (list result) (fixnum start end))
+    (loop (cond ((= end length)
+                 (push (subseq sequence start end) result)
+                 (return-from split-sequence (nreverse result)))
+                ((find (schar sequence end) bag)
+                 (push (subseq sequence start end) result)
+                 (setq start (incf end)))
+                (t (incf end))))))
 
 (defun parse-rfc822-genus (date-time-string)
   "Parse DATE-TIME-STRING with RFC822 (RFC1123, RFC2822, RFC5322),
@@ -313,7 +343,7 @@ Reference:
                (when (= 4 (length time-parts))
                  (let ((frac-part (car (last time-parts))))
                    (setf fraction
-                         (hcl:parse-float
+                         (parse-float
                           (replace (copy-seq "0.0000")
                                    frac-part :start1 2)))))))
 
@@ -529,14 +559,14 @@ Reference:
                :do (incf universal-time (* num secs))
                :finally (when (<= 7 (length time-part))
                           (setf fraction
-                                (hcl:parse-float (replace time-part "00000.")))))
+                                (parse-float (replace time-part "00000.")))))
             (loop  ;Extended format: "hh:mm", "hh:mm:ss", "hh:mm:ss,ss"
                :for d :in (ppcre:split "[:,.]" time-part) ;"," for iso8601, "." for rfc3339
                :for secs :in '#.(list +hour-secs+ +minuite-secs+ +second+)
                :do (incf universal-time (* (parse-integer d) secs))
                :finally (when (<= 10 (length time-part))
                           (setf fraction
-                                (hcl:parse-float (replace time-part "00000000."))))))))
+                                (parse-float (replace time-part "00000000."))))))))
 
     ;; 2. Parse DATE-part:
     (labels
@@ -560,7 +590,7 @@ Reference:
            ;; Parse iso8601 extended format
            ;; "YYYY-MM", "YY-MM-DD", "YYYY-MM-DD", "YYYY-DDD", "YYYY-Www-D", "YYYYYY-DDD"
            (loop
-              :for token :in (lw:split-sequence "-" date)
+              :for token :in (split-sequence "-" date)
               :with year-parsed?  := nil
               :with month-parsed? := nil
               :do (case (length token)
